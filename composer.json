@@ -1,0 +1,38 @@
+{
+    "name": "ab01faz101/tail-alert",
+    "description": "A lightweight and responsive alert package for Laravel Livewire, built with Tailwind CSS.",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Ab01faz101\\LaravelImageResizer\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Abolfazl Qaederahmat",
+            "email": "ar.rahmatyy@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=8.0",
+        "livewire/livewire": "^3.0",
+        "laravel/framework": "^11.0 || ^12.0",
+        "intervention/image-laravel": "^1.5"
+    },
+    "keywords": [
+        "livewire",
+        "image",
+        "image resize",
+        "image size",
+        "laravel image resize",
+        "laravel"
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Ab01faz101\\LaravelImageResizer\\LaravelImageResizerServiceProvider"
+            ]
+        }
+    }
+}
