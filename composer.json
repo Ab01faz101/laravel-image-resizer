@@ -1,6 +1,6 @@
 {
-    "name": "ab01faz101/tail-alert",
-    "description": "A lightweight and responsive alert package for Laravel Livewire, built with Tailwind CSS.",
+    "name": "ab01faz101/laravel-image-resizer",
+    "description": "Resize image to multiple sizes in Laravel",
     "type": "library",
     "license": "MIT",
     "autoload": {
@@ -16,7 +16,6 @@
     ],
     "require": {
         "php": ">=8.0",
-        "livewire/livewire": "^3.0",
         "laravel/framework": "^11.0 || ^12.0",
         "intervention/image-laravel": "^1.5"
     },

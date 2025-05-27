@@ -1,8 +1,8 @@
 <?php
 
-namespace Ab01faz101\TailAlert;
+namespace Ab01faz101\LaravelImageResizer;
 
-class TailAlert
+class LaravelImageResizer
 {
     public function __construct()
     {
