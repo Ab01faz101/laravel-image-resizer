@@ -21,11 +21,15 @@ A simple and flexible Laravel package for resizing and encoding images into mult
 
 1.  Require the package via Composer (assuming it’s published on Packagist):
 
+    ```sh
     composer require ab01faz101/laravel-image-resizer
+    ```
 
 2.  (Optional) Publish the config file:
 
+    ```sh
     php artisan vendor:publish --tag=laravel_image_resizer_config
+    ```
 
 3.  Configure `config/laravel_image_resizer.php` as needed (see Configuration section).
 
@@ -139,8 +143,8 @@ Array of saved file paths
 🛠️ Requirements
 ----------------
 
-*   PHP 7.4 or higher
-*   Laravel 8 or higher
+*   PHP 8.2 or higher
+*   Laravel 10 or higher
 *   Intervention Image package (`intervention/image`)
 
 * * *
