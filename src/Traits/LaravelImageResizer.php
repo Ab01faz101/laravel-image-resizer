@@ -6,6 +6,10 @@ use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Laravel\Facades\Image;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
+use Intervention\Image\Encoders\JpegEncoder;
+use Intervention\Image\Encoders\PngEncoder;
+use Intervention\Image\Encoders\WebpEncoder;
+use Intervention\Image\Interfaces\EncoderInterface;
 
 trait LaravelImageResizer
 {
@@ -13,63 +17,48 @@ trait LaravelImageResizer
         UploadedFile $image,
         string $directory = 'images',
         string $disk = 'public',
-        ?string $overrideEncoder = null // مقدار دلخواه کاربر
+        ?string $overrideEncoder = null
     ): array {
-        // پسوند و نام فایل یکتا
         $extension = strtolower($image->getClientOriginalExtension());
-        $name = pathinfo($image->getClientOriginalName(), PATHINFO_FILENAME);
-        $filenameBase = Str::slug($name) . '_' . now()->timestamp;
+        $name = time() . '-' . pathinfo($image->getClientOriginalName(), PATHINFO_FILENAME);
 
-        // وضعیت انکودر از کانفیگ
+// بدون تایم‌استمپ یا hash
+        $filenameBase = Str::slug($name);
+
         $encoderStatus = config('laravel_image_resizer.config.encoder_status');
+        $encoderObject = $encoderStatus ? $this->getEncoderType($extension, $overrideEncoder) : null;
+        $extensionToSave = $this->getExtensionForSaving($encoderStatus, $overrideEncoder, $extension);
 
-        $encoderType = null;
-        if ($encoderStatus) {
-            $encoderType = $this->getEncoderType($extension, $overrideEncoder);
-        }
+        $makeFilename = fn($size) => $filenameBase . "_{$size}." . $extensionToSave;
 
-        // تابع کمکی برای ساخت نام فایل با پسوند مناسب
-        $makeFilename = fn($size) => $filenameBase . "_{$size}." . ($encoderType === 'jpeg' ? 'jpg' : ($encoderType ?? $extension));
-
-        // ذخیره نسخه‌های مختلف با اندازه دلخواه
-        $imgOriginal = Image::read($image);
-        $width = $imgOriginal->width();
-        $height = $imgOriginal->height();
-
-        // نسخه XL (اصلی) را اگر انکودر فعال است، encode و ذخیره کن، در غیر اینصورت مستقیم آپلود کن
+// Original (xl)
         $filenameXL = $makeFilename('xl');
-        if ($encoderStatus && $encoderType) {
-            $imgXL = Image::read($image);
-            $imgXLData = (string)$imgXL->encode($encoderType);
-            Storage::disk($disk)->put("$directory/{$filenameXL}", $imgXLData);
-            $imgXL->destroy();
-        } else {
-            $filenameXL = $image->storeAs($directory, $filenameXL, $disk);
-        }
+        $imgXL = Image::read($image);
+        $xlData = $this->encodeImage($imgXL, $encoderObject, $extension);
+        Storage::disk($disk)->put("$directory/{$filenameXL}", $xlData);
 
-        // نسخه متوسط (md)
+// Medium (md)
         $filenameMd = $makeFilename('md');
         $imgMd = Image::read($image);
-        $imgMd->resize((int)($width / 2), (int)($height / 2));
-        $mdData = (string)$imgMd->encode($encoderType ?? $extension);
+        $imgMd->resize((int)($imgMd->width() / 2), (int)($imgMd->height() / 2));
+        $mdData = $this->encodeImage($imgMd, $encoderObject, $extension);
         Storage::disk($disk)->put("$directory/{$filenameMd}", $mdData);
-        $imgMd->destroy();
 
-        // نسخه کوچک (sm)
+// Small (sm)
         $filenameSm = $makeFilename('sm');
         $imgSm = Image::read($image);
-        $imgSm->resize((int)($width / 3), (int)($height / 3));
-        $smData = (string)$imgSm->encode($encoderType ?? $extension);
+        $imgSm->resize((int)($imgSm->width() / 3), (int)($imgSm->height() / 3));
+        $smData = $this->encodeImage($imgSm, $encoderObject, $extension);
         Storage::disk($disk)->put("$directory/{$filenameSm}", $smData);
-        $imgSm->destroy();
 
-        // نسخه بسیار کوچک (xs)
+// Extra small (xs)
         $filenameXs = $makeFilename('xs');
         $imgXs = Image::read($image);
-        $imgXs->resize((int)($width / 4), (int)($height / 4));
-        $xsData = (string)$imgXs->encode($encoderType ?? $extension);
+        $imgXs->resize((int)($imgXs->width() / 4), (int)($imgXs->height() / 4));
+        $xsData = $this->encodeImage($imgXs, $encoderObject, $extension);
         Storage::disk($disk)->put("$directory/{$filenameXs}", $xsData);
-        $imgXs->destroy();
+
+
 
         return [
             'xl' => "$directory/{$filenameXL}",
@@ -84,51 +73,40 @@ trait LaravelImageResizer
         array $sizes = null,
         string $directory = 'images',
         string $disk = 'public',
-        ?string $overrideEncoder = null // مقدار دلخواه کاربر
+        ?string $overrideEncoder = null
     ): array {
-        if ($sizes === null) {
-            $sizes = config('laravel_image_resizer.sizes');
-        }
+        $sizes = $sizes ?? config('laravel_image_resizer.sizes');
 
         $extension = strtolower($image->getClientOriginalExtension());
-        $name = pathinfo($image->getClientOriginalName(), PATHINFO_FILENAME);
-        $filenameBase = Str::slug($name) . '_' . now()->timestamp;
+        $name = time() . '-' . pathinfo($image->getClientOriginalName(), PATHINFO_FILENAME);
+        $filenameBase = Str::slug($name);  // بدون timestamp
 
         $encoderStatus = config('laravel_image_resizer.config.encoder_status');
-        $encoderType = null;
-        if ($encoderStatus) {
-            $encoderType = $this->getEncoderType($extension, $overrideEncoder);
-        }
+        $encoderObject = $encoderStatus ? $this->getEncoderType($extension, $overrideEncoder) : null;
+        $extensionToSave = $this->getExtensionForSaving($encoderStatus, $overrideEncoder, $extension);
 
-        // ذخیره نسخه اصلی (original)
-        $extensionToSave = $encoderType === 'jpeg' ? 'jpg' : ($encoderType ?? $extension);
+        $result = [];
+
+        // Original
         $filenameOriginal = "{$filenameBase}_original.{$extensionToSave}";
-        if ($encoderStatus && $encoderType) {
-            $imgOriginal = Image::read($image);
-            $originalData = (string)$imgOriginal->encode($encoderType);
-            Storage::disk($disk)->put("$directory/{$filenameOriginal}", $originalData);
-            $imgOriginal->destroy();
-        } else {
-            $filenameOriginal = $image->storeAs($directory, $filenameOriginal, $disk);
-        }
+        $imgOriginal = Image::read($image);
+        $originalData = $this->encodeImage($imgOriginal, $encoderObject, $extension);
+        Storage::disk($disk)->put("$directory/{$filenameOriginal}", $originalData);
+        // $imgOriginal->destroy(); // حذف این خط (متد destroy در اینجا وجود ندارد)
 
-        $result = ['original' => "$directory/{$filenameOriginal}"];
+        $result['original'] = "$directory/{$filenameOriginal}";
 
         foreach ($sizes as $sizeName => $dimensions) {
-            $width = $dimensions[0] ?? null;
-            $height = $dimensions[1] ?? null;
+            [$width, $height] = $dimensions;
 
-            if (!$width || !$height) {
-                continue;
-            }
+            if (!$width || !$height) continue;
 
-            $filename = "{$filenameBase}_{$sizeName}." . ($encoderType === 'jpeg' ? 'jpg' : ($encoderType ?? $extension));
-
+            $filename = "{$filenameBase}_{$sizeName}.{$extensionToSave}";
             $img = Image::read($image);
             $img->resize($width, $height);
-            $imageData = (string)$img->encode($encoderType ?? $extension);
+            $imageData = $this->encodeImage($img, $encoderObject, $extension);
             Storage::disk($disk)->put("$directory/{$filename}", $imageData);
-            $img->destroy();
+            // $img->destroy(); // حذف این خط
 
             $result[$sizeName] = "$directory/{$filename}";
         }
@@ -136,13 +114,25 @@ trait LaravelImageResizer
         return $result;
     }
 
-    protected function getEncoderType(string $extension, ?string $customEncoder = null): string
-    {
-        $encoderType = strtolower($customEncoder ?? config('laravel_image_resizer.config.encoder'));
 
-        return match ($encoderType) {
-            'webp', 'png', 'jpg', 'jpeg' => $encoderType,
-            default => 'jpeg',
+    protected function getEncoderType(string $extension, ?string $customEncoder = null): EncoderInterface
+    {
+        return match (strtolower($customEncoder ?? config('laravel_image_resizer.config.encoder'))) {
+            'webp' => new WebpEncoder(),
+            'png' => new PngEncoder(),
+            'jpg', 'jpeg' => new JpegEncoder(),
+            default => new JpegEncoder(),
         };
+    }
+
+    protected function getExtensionForSaving(bool $encoderStatus, ?string $customEncoder, string $defaultExtension): string
+    {
+        $ext = strtolower($customEncoder ?? config('laravel_image_resizer.config.encoder') ?? $defaultExtension);
+        return $encoderStatus ? ($ext === 'jpeg' ? 'jpg' : $ext) : $defaultExtension;
+    }
+
+    protected function encodeImage($image, ?EncoderInterface $encoder = null, string $fallbackExtension = 'jpg'): string
+    {
+        return (string)($encoder ? $image->encode($encoder) : $image->encode($fallbackExtension));
     }
 }
