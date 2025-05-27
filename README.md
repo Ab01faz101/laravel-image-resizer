@@ -1,170 +1,164 @@
-![Tail Alert Logo](https://cv.abolfazl01.ir/images/tail-alert-logo.jpg)
-# Tail Alert - Livewire Toast Notifications 🚀
-![Packagist Version](https://img.shields.io/packagist/v/Ab01faz101/tail-alert)
-![Downloads](https://img.shields.io/packagist/dt/Ab01faz101/tail-alert)
-![License](https://img.shields.io/github/license/Ab01faz101/tail_alert)
+📦 Laravel Image Resizer
+========================
 
-**Tail Alert** is a lightweight **Livewire alert package** for **Laravel**, providing stylish **toast notifications** built with **Tailwind CSS**. It helps you display modern notifications easily in any **Livewire component**.
+A simple and flexible Laravel package for resizing and encoding images into multiple sizes and formats, powered by [Intervention Image](http://image.intervention.io/).
 
+* * *
 
-## 📦 Installation & Links
-- **GitHub Repo**: [Tail Alert on GitHub](https://github.com/Ab01faz101/tail_alert)
-- **Packagist**: [Tail Alert on Packagist](https://packagist.org/packages/ab01faz101/tail-alert)
+✨ Features
+----------
 
+*   Resize images into multiple predefined sizes (XL, MD, SM, XS) or custom sizes.
+*   Supports image encoding formats: `jpeg`, `jpg`, `png`, and `webp`.
+*   Saves resized images to specified storage disk and directory.
+*   Option to override encoder format dynamically.
+*   Uses Laravel's filesystem and Intervention Image package under the hood.
 
-## 🚀 Why Use Tail Alert?
-- No need for extra JavaScript libraries
-- Works seamlessly with **Livewire**
-- Uses **Tailwind CSS** for modern designs
-- Lightweight and fast 🚀
+* * *
 
+🚀 Installation
+---------------
 
+1.  Require the package via Composer (assuming it’s published on Packagist):
 
-## Features
-✔ Modern and minimal design with **Tailwind**  
-✔ Fully compatible with **Livewire**  
-✔ Supports different alert types (success, warning, error, info)  
+    composer require ab01faz101/laravel-image-resizer
 
-## Preview
-![Tail Alert Preview](https://cv.abolfazl01.ir/images/tail-alert-demo.png)
-![Tail Alert Preview](https://cv.abolfazl01.ir/images/tail-alert-modal.png)
+2.  (Optional) Publish the config file:
 
+    php artisan vendor:publish --tag=laravel_image_resizer_config
 
-## 🛠️ Installation
-### You can install the package via composer:
-```sh
-composer require ab01faz101/tail-alert
-```
-```sh
- php artisan vendor:publish --provider="Ab01faz101\TailAlert\TailAlertServiceProvider" --force
-```
+3.  Configure `config/laravel_image_resizer.php` as needed (see Configuration section).
 
-### Add the following codes to your custom style or app.css.
-```css
-@source '../../public/vendor/tail_alert/alert.js"';
+* * *
 
-.tail_alert_item.active{
-    animation: tail_alert_item_move .4s;
-}
+⚙️ Configuration
+----------------
 
-.tail_alert_item.active .tail_alert_time_animation{
-    margin: 0!important;
-    animation: fullWidthAnimate 5s ease;
-}
+The package configuration file contains:
 
+    return [
+        'sizes' => [
+            'lg' => [1200, 800],
+            'md' => [600, 400],
+            'sm' => [150, 150],
+        ],
+        'config' => [
+            'encoder_status' => true,
+            'encoder' => 'webp', // supported values: 'webp', 'png', 'jpeg', 'jpg'
+        ],
+    ];
 
+*   `sizes`: Default sizes for resizing.
+*   `encoder_status`: Enable or disable image encoding.
+*   `encoder`: Default encoder format for output images.
 
-@keyframes fullWidthAnimate {
-    0%{
-        width: 0;
-    }
-    100%{
-        width: 100%;
-    }
-}
+* * *
 
-@keyframes tail_alert_item_move {
-    0%{
-        transform: translateX(100%);
-    }
-    100%{
-        transform: translateX(0);
-    }
-}
+📚 Usage
+--------
 
+Include the `LaravelImageResizer` trait in your Laravel class:
 
-```
-### Next, add the scripts component to your template after the @livewireScripts.
-```php
-<script src="{{ asset('vendor/tail_alert/alert.js') }}"></script>
-```
-
-
-### Add this line of code to your Livewire component.
-```php
-@include('components.alerts')
-```
-
-
-**Note:** This package requires **Tailwind CSS** to be installed in your project.
-
-## 🔔 Usage
-
-### You can use Tail Alert  by using the AlertTrait trait.
-
-```php
-use Ab01faz101\TailAlert\Traits\TailAlertTrait;
- 
-class Index extends Component
-{
-    use TailAlertTrait;
+    use Ab01faz101\LaravelImageResizer\Traits\LaravelImageResizer;
     
-    public function submit()
+    class YourClass
     {
-        $this->alert('success', 'Basic Alert');
+        use LaravelImageResizer;
+    
+        // Your methods
     }
-}
-```
 
 
+### 🖼️ Basic resize and save
+
+    use Illuminate\Http\Request;
+    
+    public function uploadImage(Request $request)
+    {
+        $image = $request->file('image');
+    
+        $paths = $this->resizeAndSave(
+            $image,
+            'uploads/images', // target directory
+            'public',         // storage disk
+            'webp'            // optional encoder override
+        );
+    
+        // $paths will be an array with keys: xl, md, sm, xs containing saved paths.
+    }
 
 
+### 🔧 Resize with custom sizes
 
-In your Livewire component, you can trigger an alert like this:
-```php
-$this->alert('success', 'alert message'  , "description");
-$this->alert('info', 'alert message'  , "description");
-$this->alert('warning', 'alert message' , "description");
-$this->alert('error', 'alert message'  , "description");
-```
-
-<a href="https://www.youtube.com/watch?v=2cfV8cwz7wo"><img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif"></a>
-
-```php
-public function flashSuccess() {
-    session()->flash('alert', [
-        'type' => 'success',
-        'message' => 'Successful Operation!'
-    ]);
-}
-
-public function flashError() {
-    session()->flash('alert', [
-        'type' => 'error',
-        'message' => 'An Error Occurred.'
-    ]);
-}
-
-public function flashWarning() {
-    session()->flash('alert', [
-        'type' => 'warning',
-        'message' => 'Warning.'
-    ]);
-}
-
-public function flashInfo() {
-    session()->flash('alert', [
-        'type' => 'info',
-        'message' => 'Information.'
-    ]);
-}
-```
-
-```php
-public function redirectAlert() {
-    return redirect()->route('test')->with('alert' , [
-        'type' => 'success',
-        'message' => 'mission successfully!'
-    ]);
-}
-```
-
-💡 The **type** can be `success`, `error`, `warning`, or `info`.
+    $sizes = [
+        'large' => [1200, 800],
+        'medium' => [600, 400],
+        'small' => [300, 200],
+    ];
+    
+    $paths = $this->resizeWithCustomSizes(
+        $image,
+        $sizes,
+        'uploads/custom',
+        'public',
+        'png'
+    );
 
 
-## 🔍 Keywords  
-Livewire Toast Notifications, Laravel Alerts, Tailwind CSS Alerts, Livewire Notifications, Laravel Toast  
+* * *
 
+📋 Methods
+----------
 
-## License
-This package is released under the **MIT License**.
+Method
+
+Description
+
+Parameters
+
+Returns
+
+`resizeAndSave`
+
+Resize the uploaded image into default sizes and save
+
+`UploadedFile $image`, `string $directory`, `string $disk`, `?string $overrideEncoder`
+
+Array of saved file paths
+
+`resizeWithCustomSizes`
+
+Resize the image to custom sizes and save
+
+`UploadedFile $image`, `array $sizes`, `string $directory`, `string $disk`, `?string $overrideEncoder`
+
+Array of saved file paths
+
+* * *
+
+🛠️ Requirements
+----------------
+
+*   PHP 7.4 or higher
+*   Laravel 8 or higher
+*   Intervention Image package (`intervention/image`)
+
+* * *
+
+📄 License
+----------
+
+MIT License
+
+* * *
+
+👨‍💻 Author
+------------
+
+Abolfazl Qaederahmat
+
+* * *
+
+⭐ If you find this package useful, please star the repository on [GitHub](https://github.com/abolfazlqaederahmat/laravel-image-resizer) ⭐
+
+© 2025 Abolfazl Qaederahmat
