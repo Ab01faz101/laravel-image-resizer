@@ -1,7 +1,15 @@
-📦 Laravel Image Resizer
+#📦 Laravel Image Resizer
 ========================
+![Packagist Version](https://img.shields.io/packagist/v/ab01faz101/laravel-image-resizer)
+![Downloads](https://img.shields.io/packagist/dt/ab01faz101/laravel-image-resizer)
+![License](https://img.shields.io/github/license/Ab01faz101/laravel-image-resizer)
+
 
 A simple and flexible Laravel package for resizing and encoding images into multiple sizes and formats, powered by [Intervention Image](http://image.intervention.io/).
+
+
+
+
 
 * * *
 
@@ -15,6 +23,9 @@ A simple and flexible Laravel package for resizing and encoding images into mult
 *   Uses Laravel's filesystem and Intervention Image package under the hood.
 
 * * *
+
+
+
 
 🚀 Installation
 ---------------
