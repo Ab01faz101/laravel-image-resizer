@@ -40,21 +40,21 @@ trait LaravelImageResizer
 // Medium (md)
         $filenameMd = $makeFilename('md');
         $imgMd = Image::read($image);
-        $imgMd->resize((int)($imgMd->width() / 2), (int)($imgMd->height() / 2));
+        $imgMd->resize((int)($imgMd->width() / 1.5), (int)($imgMd->height() / 1.5));
         $mdData = $this->encodeImage($imgMd, $encoderObject, $extension);
         Storage::disk($disk)->put("$directory/{$filenameMd}", $mdData);
 
 // Small (sm)
         $filenameSm = $makeFilename('sm');
         $imgSm = Image::read($image);
-        $imgSm->resize((int)($imgSm->width() / 3), (int)($imgSm->height() / 3));
+        $imgSm->resize((int)($imgSm->width() / 2), (int)($imgSm->height() / 2));
         $smData = $this->encodeImage($imgSm, $encoderObject, $extension);
         Storage::disk($disk)->put("$directory/{$filenameSm}", $smData);
 
 // Extra small (xs)
         $filenameXs = $makeFilename('xs');
         $imgXs = Image::read($image);
-        $imgXs->resize((int)($imgXs->width() / 4), (int)($imgXs->height() / 4));
+        $imgXs->resize((int)($imgXs->width() / 3), (int)($imgXs->height() / 3));
         $xsData = $this->encodeImage($imgXs, $encoderObject, $extension);
         Storage::disk($disk)->put("$directory/{$filenameXs}", $xsData);
 
