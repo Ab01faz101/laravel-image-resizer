@@ -51,7 +51,7 @@ trait LaravelImageResizer
         // Medium (md)
         $filenameMd = $makeFilename('md');
         $imgMd = Image::read($image);
-        $imgMd->resize((int) ($imgMd->width() / 1.5), (int) ($imgMd->height() / 1.5));
+        $imgMd->resize((int) ($imgMd->width() / 1.5), (int) ($imgMd->height() / 1.25));
         $mdData = $this->encodeImage($imgMd, $encoderObject, $extension);
         Storage::disk($disk)->put("$directory/{$filenameMd}", $mdData);
 
