@@ -90,7 +90,7 @@ trait LaravelImageResizer
 
         $extension = strtolower($image->getClientOriginalExtension());
         $name      = pathinfo($image->getClientOriginalName(), PATHINFO_FILENAME);
-        $filenameBase = Str::slug($name);  // بدون timestamp
+        $filenameBase = Str::slug($name);
 
         $encoderStatus = config('laravel_image_resizer.config.encoder_status');
         $encoderObject = $encoderStatus ? $this->getEncoderType($extension, $overrideEncoder) : null;
@@ -98,8 +98,8 @@ trait LaravelImageResizer
 
         $result = [];
 
-        // Original
-        $filenameOriginal = "{$filenameBase}_original.{$extensionToSave}";
+        // 
+        $filenameOriginal = "{$filenameBase}.{$extensionToSave}";
         $imgOriginal = Image::read($image);
         $originalData = $this->encodeImage($imgOriginal, $encoderObject, $extension);
         Storage::disk($disk)->put("$directory/{$filenameOriginal}", $originalData);
@@ -113,6 +113,11 @@ trait LaravelImageResizer
             if (!$width || !$height)
                 continue;
 
+            if($sizeName != "xl"){
+                $filename = "{$filenameBase}_{$sizeName}.{$extensionToSave}";
+            }else{
+                $filename = "{$filenameBase}.{$extensionToSave}";
+            }
             $filename = "{$filenameBase}_{$sizeName}.{$extensionToSave}";
             $img = Image::read($image);
             $img->resize($width, $height);
