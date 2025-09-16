@@ -21,49 +21,51 @@ trait LaravelImageResizer
     ): array {
         $extension = strtolower($image->getClientOriginalExtension());
         $name = pathinfo($image->getClientOriginalName(), PATHINFO_FILENAME);
-        $filename = $name . '.' . $extension;
+
+        // بیس‌اسم رو اسلاگ می‌کنیم
+        $filenameBase = Str::slug($name);
+        $filename = $filenameBase . '.' . $extension;
 
         $counter = 1;
 
+        // یکتا کردن با شمارنده
         while (Storage::disk($disk)->exists($directory . '/' . $filename)) {
-            $filename = $name . '-' . $counter . '.' . $extension;
+            $filename = $filenameBase . '-' . $counter . '.' . $extension;
             $counter++;
         }
 
-
-// بدون تایم‌استمپ یا hash
-        $filenameBase = Str::slug($name);
-
+        // حالا بر اساس filename انتخاب شده
         $encoderStatus = config('laravel_image_resizer.config.encoder_status');
         $encoderObject = $encoderStatus ? $this->getEncoderType($extension, $overrideEncoder) : null;
         $extensionToSave = $this->getExtensionForSaving($encoderStatus, $overrideEncoder, $extension);
 
-        $makeFilename = fn($size) => $filenameBase . "_{$size}." . $extensionToSave;
+        $makeFilename = fn($size) => pathinfo($filename, PATHINFO_FILENAME) . "_{$size}." . $extensionToSave;
 
-// Original (xl)
-        $filenameXL = $filenameBase  . '.' . $extensionToSave;
+        // Original (xl)
+        $filenameXL = pathinfo($filename, PATHINFO_FILENAME) . '.' . $extensionToSave;
         $imgXL = Image::read($image);
         $xlData = $this->encodeImage($imgXL, $encoderObject, $extension);
         Storage::disk($disk)->put("$directory/{$filenameXL}", $xlData);
 
-// Medium (md)
+
+        // Medium (md)
         $filenameMd = $makeFilename('md');
         $imgMd = Image::read($image);
-        $imgMd->resize((int)($imgMd->width() / 1.5), (int)($imgMd->height() / 1.5));
+        $imgMd->resize((int) ($imgMd->width() / 1.5), (int) ($imgMd->height() / 1.5));
         $mdData = $this->encodeImage($imgMd, $encoderObject, $extension);
         Storage::disk($disk)->put("$directory/{$filenameMd}", $mdData);
 
-// Small (sm)
+        // Small (sm)
         $filenameSm = $makeFilename('sm');
         $imgSm = Image::read($image);
-        $imgSm->resize((int)($imgSm->width() / 2), (int)($imgSm->height() / 2));
+        $imgSm->resize((int) ($imgSm->width() / 2), (int) ($imgSm->height() / 2));
         $smData = $this->encodeImage($imgSm, $encoderObject, $extension);
         Storage::disk($disk)->put("$directory/{$filenameSm}", $smData);
 
-// Extra small (xs)
+        // Extra small (xs)
         $filenameXs = $makeFilename('xs');
         $imgXs = Image::read($image);
-        $imgXs->resize((int)($imgXs->width() / 3), (int)($imgXs->height() / 3));
+        $imgXs->resize((int) ($imgXs->width() / 3), (int) ($imgXs->height() / 3));
         $xsData = $this->encodeImage($imgXs, $encoderObject, $extension);
         Storage::disk($disk)->put("$directory/{$filenameXs}", $xsData);
 
@@ -87,7 +89,7 @@ trait LaravelImageResizer
         $sizes = $sizes ?? config('laravel_image_resizer.sizes');
 
         $extension = strtolower($image->getClientOriginalExtension());
-        $name = time() . '-' . pathinfo($image->getClientOriginalName(), PATHINFO_FILENAME);
+        $name      = pathinfo($image->getClientOriginalName(), PATHINFO_FILENAME);
         $filenameBase = Str::slug($name);  // بدون timestamp
 
         $encoderStatus = config('laravel_image_resizer.config.encoder_status');
@@ -108,7 +110,8 @@ trait LaravelImageResizer
         foreach ($sizes as $sizeName => $dimensions) {
             [$width, $height] = $dimensions;
 
-            if (!$width || !$height) continue;
+            if (!$width || !$height)
+                continue;
 
             $filename = "{$filenameBase}_{$sizeName}.{$extensionToSave}";
             $img = Image::read($image);
@@ -142,6 +145,6 @@ trait LaravelImageResizer
 
     protected function encodeImage($image, ?EncoderInterface $encoder = null, string $fallbackExtension = 'jpg'): string
     {
-        return (string)($encoder ? $image->encode($encoder) : $image->encode($fallbackExtension));
+        return (string) ($encoder ? $image->encode($encoder) : $image->encode($fallbackExtension));
     }
 }
