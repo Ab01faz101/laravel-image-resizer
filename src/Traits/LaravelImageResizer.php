@@ -32,7 +32,7 @@ trait LaravelImageResizer
         $makeFilename = fn($size) => $filenameBase . "_{$size}." . $extensionToSave;
 
 // Original (xl)
-        $filenameXL = $makeFilename('xl');
+        $filenameXL = $filenameBase  . '.' . $extensionToSave;
         $imgXL = Image::read($image);
         $xlData = $this->encodeImage($imgXL, $encoderObject, $extension);
         Storage::disk($disk)->put("$directory/{$filenameXL}", $xlData);
