@@ -20,7 +20,16 @@ trait LaravelImageResizer
         ?string $overrideEncoder = null
     ): array {
         $extension = strtolower($image->getClientOriginalExtension());
-        $name = time() . '-' . pathinfo($image->getClientOriginalName(), PATHINFO_FILENAME);
+        $name = pathinfo($image->getClientOriginalName(), PATHINFO_FILENAME);
+        $filename = $name . '.' . $extension;
+
+        $counter = 1;
+
+        while (Storage::disk($disk)->exists($directory . '/' . $filename)) {
+            $filename = $name . '-' . $counter . '.' . $extension;
+            $counter++;
+        }
+
 
 // بدون تایم‌استمپ یا hash
         $filenameBase = Str::slug($name);
