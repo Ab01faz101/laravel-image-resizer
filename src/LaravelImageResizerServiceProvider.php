@@ -20,6 +20,7 @@ class LaravelImageResizerServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__ . '/Configs/laravel_image_resizer.php' => config_path('laravel_image_resizer.php'),
         ], 'config');
+
     }
 
 }
